@@ -17,10 +17,14 @@ func New(dbConfig config.DBConfig) (*Storage, error) {
 		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Passwd, dbConfig.DBName)
 
 	db, err := sql.Open("pgx", psqlInfo)
-	defer db.Close()
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error Creating Connection DB %s", err)
 	}
 	return &Storage{DB: db}, nil
+}
+
+func (store Storage) Close() error {
+	err := store.DB.Close()
+	return fmt.Errorf("error Shuttingdown DB %s", err)
 }

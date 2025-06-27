@@ -2,26 +2,37 @@ package app
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"time"
 	"tradeservice/internal/config"
 	srv "tradeservice/internal/server/server"
+	"tradeservice/internal/storage/postgres"
 )
 
 type App struct {
 	server *srv.Server
 	logger *slog.Logger
+	db     *postgres.Storage
 }
 
 func New(logger *slog.Logger, cfg *config.AppConfig) *App {
 
 	//handler := handl.New(logger, client)
 
-	server := srv.New(logger, &cfg.Server)
+	db, err := postgres.New(cfg.DB)
+	if err != nil {
+		log.Fatalf("Couldn't establish db connection %s", err)
+	}
+
+	server := srv.New(logger, &cfg.Server, db)
+
+	log.Print("Config: ", cfg)
 
 	return &App{
 		server: server,
 		logger: logger,
+		db:     db,
 	}
 }
 

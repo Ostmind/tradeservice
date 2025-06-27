@@ -20,7 +20,7 @@ type DBConfig struct {
 }
 
 type ServerConfig struct {
-	Port            string        `env:"SERVER_PORT" envDefault:"8080"`
+	Port            int           `env:"SERVER_PORT" envDefault:8080`
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT_SECONDS" envDefault:5`
 	EnvType         string        `env:"ENV_TYPE" envDefault:"local"`
 }

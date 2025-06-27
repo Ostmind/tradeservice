@@ -3,35 +3,40 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
 	"tradeservice/internal/config"
+	"tradeservice/internal/server/middleware"
+	"tradeservice/internal/storage/postgres"
 )
 
 type Server struct {
-	server *http.Server
-	logger *slog.Logger
-	port   string
+	server  *echo.Echo
+	logger  *slog.Logger
+	storage *postgres.Storage
+	port    int
 }
 
-func New(logger *slog.Logger, cfg *config.ServerConfig) *Server {
+func New(logger *slog.Logger, cfg *config.ServerConfig, db *postgres.Storage) *Server {
 
-	server := &http.Server{
-		Addr: ":" + cfg.Port,
-		//Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//	handler.GetRequest(w, r)
-		//}),
-	}
+	server := echo.New()
+
+	server.Use(middleware.LogRequest)
+	//server.POST("/:operation", handler.Calculation)
 
 	return &Server{
-		logger: logger,
-		server: server,
-		port:   cfg.Port,
+		//handler: handler,
+		logger:  logger,
+		server:  server,
+		storage: db,
+		port:    cfg.Port,
 	}
 }
 func (s Server) Run() {
-	s.logger.Info("Server is running on: localhost", "Port", s.port)
-	if err := s.server.ListenAndServe(); err != nil {
+	s.logger.Info("Server is running on: localhost: ", s.port)
+	if err := s.server.Start(fmt.Sprintf("localhost:%d", s.port)); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			s.logger.Error("Server starting error: %v", err)
 		}
@@ -39,12 +44,18 @@ func (s Server) Run() {
 }
 
 func (s Server) Stop(ctx context.Context) error {
+	s.logger.Info("Stopping DB Connection")
+	err := s.storage.Close()
+	if err != nil {
+		s.logger.Error("Error Closing DB: ", err)
+	}
+
 	s.logger.Info("Stopping server...")
-	err := s.server.Shutdown(ctx)
+	err = s.server.Shutdown(ctx)
 
 	if err != nil {
 		s.logger.Error("Error: ", err)
 	}
 
-	return err
+	return fmt.Errorf("error While Stopping Server Request %s", err)
 }

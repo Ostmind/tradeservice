@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"tradeservice/internal/app"
 	"tradeservice/internal/config"
-	"tradeservice/internal/server/logger"
+	"tradeservice/internal/logger"
 )
 
 func main() {
