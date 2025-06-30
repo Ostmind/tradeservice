@@ -22,12 +22,10 @@ func New(logger *slog.Logger, cfg *config.AppConfig) *App {
 
 	db, err := postgres.New(cfg.DB)
 	if err != nil {
-		log.Fatalf("Couldn't establish db connection %s", err)
+		log.Fatalf("couldn't establish db connection %w", err)
 	}
 
 	server := srv.New(logger, &cfg.Server, db)
-
-	log.Print("Config: ", cfg)
 
 	return &App{
 		server: server,

@@ -1,30 +1,49 @@
 package postgres
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"tradeservice/internal/config"
 )
 
 type Storage struct {
-	DB *sql.DB
+	DB *pgxpool.Pool
 }
 
 func New(dbConfig config.DBConfig) (*Storage, error) {
+	db := &Storage{}
+
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Passwd, dbConfig.DBName)
 
-	db, err := sql.Open("pgx", psqlInfo)
+	err := db.connect(psqlInfo)
 
 	if err != nil {
-		return nil, fmt.Errorf("error Creating Connection DB %s", err)
+		return nil, fmt.Errorf("error creating connection DB %w", err)
 	}
-	return &Storage{DB: db}, nil
+	return db, nil
 }
 
-func (store Storage) Close() error {
-	err := store.DB.Close()
-	return fmt.Errorf("error Shuttingdown DB %s", err)
+func (store *Storage) Close() {
+	store.DB.Close()
+}
+
+func (store *Storage) connect(connStr string) error {
+	pool, err := pgxpool.New(context.Background(), connStr)
+
+	if err != nil {
+		return fmt.Errorf("db.connect: %v", err)
+	}
+
+	err = pool.Ping(context.Background())
+
+	if err != nil {
+		return fmt.Errorf("db.connect pool ping: %v", err)
+	}
+
+	store.DB = pool
+	return nil
 }

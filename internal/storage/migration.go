@@ -13,7 +13,7 @@ func RunMigration(db *sql.DB, logger *slog.Logger) error {
 
 	err := goose.Up(db, "./internal/migrations")
 	if err != nil {
-		return fmt.Errorf("error Creating Migration %s", err)
+		return fmt.Errorf("error creating migration %w", err)
 	}
 
 	return nil

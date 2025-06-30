@@ -23,7 +23,7 @@ func New(logger *slog.Logger, cfg *config.ServerConfig, db *postgres.Storage) *S
 
 	server := echo.New()
 
-	server.Use(middleware.LogRequest)
+	server.Use(middleware.LogRequest(logger))
 	//server.POST("/:operation", handler.Calculation)
 
 	return &Server{
@@ -35,7 +35,7 @@ func New(logger *slog.Logger, cfg *config.ServerConfig, db *postgres.Storage) *S
 	}
 }
 func (s Server) Run() {
-	s.logger.Info("Server is running on: localhost: ", s.port)
+	s.logger.Info("Server is running on: localhost", "Port", s.port)
 	if err := s.server.Start(fmt.Sprintf("localhost:%d", s.port)); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			s.logger.Error("Server starting error: %v", err)
@@ -45,17 +45,16 @@ func (s Server) Run() {
 
 func (s Server) Stop(ctx context.Context) error {
 	s.logger.Info("Stopping DB Connection")
-	err := s.storage.Close()
-	if err != nil {
-		s.logger.Error("Error Closing DB: ", err)
-	}
+
+	s.storage.Close()
 
 	s.logger.Info("Stopping server...")
-	err = s.server.Shutdown(ctx)
+	err := s.server.Shutdown(ctx)
 
 	if err != nil {
 		s.logger.Error("Error: ", err)
+		return fmt.Errorf("error while stopping Server Request %w", err)
 	}
 
-	return fmt.Errorf("error While Stopping Server Request %s", err)
+	return nil
 }
