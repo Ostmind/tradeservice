@@ -6,46 +6,46 @@ import (
 	"tradeservice/internal/models"
 )
 
-type Categories struct {
+type Products struct {
 	db *Storage
 }
 
-func NewCategories(db *Storage) (*Categories, error) {
+func NewProducts(db *Storage) (*Categories, error) {
 	return &Categories{
 		db: db,
 	}, nil
 }
 
-func (c *Categories) Get(ctx context.Context) (category []models.Category, err error) {
+func (c *Products) Get(ctx context.Context) (product []models.Product, err error) {
 
-	sqlStatement := `SELECT * FROM public.categories`
+	sqlStatement := `SELECT * FROM public.products`
 
 	rows, err := c.db.DB.Query(ctx, sqlStatement)
 	defer rows.Close()
 
 	if err != nil {
-		return category, fmt.Errorf("failed to query DB %w", err)
+		return product, fmt.Errorf("failed to query DB %w", err)
 	}
 
 	for rows.Next() {
 
-		cat := models.Category{}
+		prod := models.Product{}
 
-		err = rows.Scan(&cat.Id, &cat.Name, &cat.Created, &cat.ProductId, &cat.Updated)
+		err = rows.Scan(&prod.Id, &prod.Name, &prod.Created, &prod.Updated)
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DB %w", err)
 		}
-		category = append(category, cat)
+		product = append(product, prod)
 
 	}
 
-	return category, nil
+	return product, nil
 
 }
 
-func (c *Categories) Add(ctx context.Context, name string, productId string) (id string, err error) {
-	sqlStatement := `INSERT INTO public.categories
+func (c *Products) Add(ctx context.Context, name string, productId string) (id string, err error) {
+	sqlStatement := `INSERT INTO public.products
 					(name,product_id,created_at,updated_at) 
 					values ($1,$2,now(),now());`
 
@@ -54,7 +54,7 @@ func (c *Categories) Add(ctx context.Context, name string, productId string) (id
 		return "", fmt.Errorf("error adding to DB %w", err)
 	}
 
-	sqlStatement = `SELECT id FROM public.categories where name = $1`
+	sqlStatement = `SELECT id FROM public.products where name = $1`
 
 	rows, err := c.db.DB.Query(ctx, sqlStatement)
 	defer rows.Close()
@@ -72,8 +72,8 @@ func (c *Categories) Add(ctx context.Context, name string, productId string) (id
 	return id, nil
 }
 
-func (c *Categories) Delete(ctx context.Context, id string) error {
-	sqlStatement := `DELETE FROM public.categories WHERE id = $1;`
+func (c *Products) Delete(ctx context.Context, id string) error {
+	sqlStatement := `DELETE FROM public.products WHERE id = $1;`
 
 	_, err := c.db.DB.Exec(ctx, sqlStatement, id)
 	if err != nil {
@@ -83,8 +83,8 @@ func (c *Categories) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c *Categories) Set(ctx context.Context, id string, name string) error {
-	sqlStatement := `UPDATE public.categories SET name = $1 WHERE id = $2;`
+func (c *Products) Set(ctx context.Context, id string, name string) error {
+	sqlStatement := `UPDATE public.products SET name = $1 WHERE id = $2;`
 
 	_, err := c.db.DB.Exec(ctx, sqlStatement, name, id)
 	if err != nil {

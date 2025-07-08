@@ -1,4 +1,4 @@
-package categories
+package product
 
 import (
 	"context"
@@ -7,17 +7,17 @@ import (
 	"tradeservice/internal/storage"
 )
 
-type StorageCategories struct {
+type StorageProducts struct {
 	storage storage.Repository
 }
 
-func New(storage storage.Repository) *StorageCategories {
-	return &StorageCategories{
+func New(storage storage.Repository) *StorageProducts {
+	return &StorageProducts{
 		storage: storage,
 	}
 }
 
-func (c StorageCategories) Add(ctx context.Context, name string, productId string) (id string, err error) {
+func (c StorageProducts) Add(ctx context.Context, name string, productId string) (id string, err error) {
 
 	id, err = c.storage.Add(ctx, name, productId)
 
@@ -28,7 +28,7 @@ func (c StorageCategories) Add(ctx context.Context, name string, productId strin
 	return id, nil
 }
 
-func (c StorageCategories) Set(ctx context.Context, id string, name string) error {
+func (c StorageProducts) Set(ctx context.Context, id string, name string) error {
 
 	err := c.storage.Set(ctx, id, name)
 
@@ -39,7 +39,7 @@ func (c StorageCategories) Set(ctx context.Context, id string, name string) erro
 	return nil
 }
 
-func (c StorageCategories) Get(ctx context.Context) ([]models.Category, error) {
+func (c StorageProducts) Get(ctx context.Context) ([]models.Category, error) {
 	category, err := c.storage.Get(ctx)
 
 	if err != nil {
@@ -49,7 +49,7 @@ func (c StorageCategories) Get(ctx context.Context) ([]models.Category, error) {
 	return category, nil
 }
 
-func (c StorageCategories) Delete(ctx context.Context, id string) error {
+func (c StorageProducts) Delete(ctx context.Context, id string) error {
 
 	err := c.storage.Delete(ctx, id)
 	if err != nil {
