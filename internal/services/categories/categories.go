@@ -8,10 +8,10 @@ import (
 )
 
 type StorageCategories struct {
-	storage storage.Repository
+	storage storage.StoreRepository
 }
 
-func New(storage storage.Repository) *StorageCategories {
+func New(storage storage.StoreRepository) *StorageCategories {
 	return &StorageCategories{
 		storage: storage,
 	}

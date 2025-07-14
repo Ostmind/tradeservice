@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"tradeservice/internal/config"
+	"tradeservice/internal/server/handler"
 	"tradeservice/internal/server/middleware"
 	"tradeservice/internal/storage/postgres"
 )
@@ -19,12 +20,29 @@ type Server struct {
 	port    int
 }
 
-func New(logger *slog.Logger, cfg *config.ServerConfig, db *postgres.Storage) *Server {
+func New(logger *slog.Logger,
+	cfg *config.ServerConfig,
+	db *postgres.Storage,
+	categoryHandler *handlers.CategoriesController,
+	productHandler *handlers.ProductController) *Server {
 
 	server := echo.New()
 
 	server.Use(middleware.LogRequest(logger))
-	//server.POST("/:operation", handler.Calculation)
+
+	categoryGroup := server.Group("categories")
+
+	categoryGroup.GET("", categoryHandler.Get)
+	categoryGroup.DELETE("/:id", categoryHandler.Delete)
+	categoryGroup.POST("/create", categoryHandler.Add)
+	categoryGroup.POST("/update", categoryHandler.Set)
+
+	productGroup := server.Group("product")
+
+	productGroup.GET("", productHandler.Get)
+	productGroup.DELETE("/:id", productHandler.Delete)
+	productGroup.POST("/create", productHandler.Add)
+	productGroup.POST("/update", productHandler.Set)
 
 	return &Server{
 		//handler: handler,

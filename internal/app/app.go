@@ -6,7 +6,10 @@ import (
 	"log/slog"
 	"time"
 	"tradeservice/internal/config"
+	"tradeservice/internal/server/handler"
 	srv "tradeservice/internal/server/server"
+	"tradeservice/internal/services/categories"
+	"tradeservice/internal/services/product"
 	"tradeservice/internal/storage/postgres"
 )
 
@@ -18,14 +21,28 @@ type App struct {
 
 func New(logger *slog.Logger, cfg *config.AppConfig) *App {
 
-	//handler := handl.New(logger, client)
-
 	db, err := postgres.New(cfg.DB)
 	if err != nil {
 		log.Fatalf("couldn't establish db connection %w", err)
 	}
 
-	server := srv.New(logger, &cfg.Server, db)
+	categoryStorage, err := postgres.NewCategories(db)
+	if err != nil {
+		log.Fatalf("couldn't create categories %w", err)
+	}
+
+	productStorage, err := postgres.NewProducts(db)
+	if err != nil {
+		log.Fatalf("couldn't create products %w", err)
+	}
+
+	categoryManager := categories.New(categoryStorage)
+	productManager := product.New(productStorage)
+
+	categoryHandler := handlers.NewCategoriesHandler(categoryManager, logger)
+	productHandler := handlers.NewProductHandler(productManager, logger)
+
+	server := srv.New(logger, &cfg.Server, db, categoryHandler, productHandler)
 
 	return &App{
 		server: server,
