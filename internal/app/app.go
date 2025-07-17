@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"log/slog"
 	"time"
 	"tradeservice/internal/config"
@@ -10,6 +10,7 @@ import (
 	srv "tradeservice/internal/server/server"
 	"tradeservice/internal/services/categories"
 	"tradeservice/internal/services/product"
+	"tradeservice/internal/storage"
 	"tradeservice/internal/storage/postgres"
 )
 
@@ -17,23 +18,24 @@ type App struct {
 	server *srv.Server
 	logger *slog.Logger
 	db     *postgres.Storage
+	cfg    *config.AppConfig
 }
 
-func New(logger *slog.Logger, cfg *config.AppConfig) *App {
+func New(logger *slog.Logger, cfg *config.AppConfig) (*App, error) {
 
 	db, err := postgres.New(cfg.DB)
 	if err != nil {
-		log.Fatalf("couldn't establish db connection %w", err)
+		return nil, fmt.Errorf("couldn't establish db connection %w", err)
 	}
 
 	categoryStorage, err := postgres.NewCategories(db)
 	if err != nil {
-		log.Fatalf("couldn't create categories %w", err)
+		return nil, fmt.Errorf("couldn't create categories %w", err)
 	}
 
 	productStorage, err := postgres.NewProducts(db)
 	if err != nil {
-		log.Fatalf("couldn't create products %w", err)
+		return nil, fmt.Errorf("couldn't create products %w", err)
 	}
 
 	categoryManager := categories.New(categoryStorage)
@@ -48,18 +50,24 @@ func New(logger *slog.Logger, cfg *config.AppConfig) *App {
 		server: server,
 		logger: logger,
 		db:     db,
-	}
+		cfg:    cfg,
+	}, nil
 }
 
-func (a App) Run() {
+func (a App) Run() error {
 	a.logger.Info("Starting app...")
+	err := storage.RunMigration(a.db, a.logger, a.cfg.Server.MigrationPath)
+	if err != nil {
+		return fmt.Errorf("couldn't run migrations %w", err)
+	}
 	go a.server.Run()
+	return nil
 }
 
 func (a App) Stop(ctx context.Context, shutdownTimeout time.Duration) {
 	a.logger.Info("Stopping app...")
 
-	timeout := shutdownTimeout * time.Second
+	timeout := shutdownTimeout
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 

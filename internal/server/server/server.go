@@ -33,19 +33,18 @@ func New(logger *slog.Logger,
 	categoryGroup := server.Group("categories")
 
 	categoryGroup.GET("", categoryHandler.Get)
-	categoryGroup.DELETE("/:id", categoryHandler.Delete)
-	categoryGroup.POST("/create", categoryHandler.Add)
-	categoryGroup.POST("/update", categoryHandler.Set)
+	categoryGroup.DELETE("/:categoryId", categoryHandler.Delete)
+	categoryGroup.POST("/create/:categoryName/:productId", categoryHandler.Add)
+	categoryGroup.POST("/update/:categoryId/:categoryName", categoryHandler.Set)
 
 	productGroup := server.Group("product")
 
 	productGroup.GET("", productHandler.Get)
-	productGroup.DELETE("/:id", productHandler.Delete)
-	productGroup.POST("/create", productHandler.Add)
-	productGroup.POST("/update", productHandler.Set)
+	productGroup.DELETE("/:productId", productHandler.Delete)
+	productGroup.POST("/create/:productName/:productId", productHandler.Add)
+	productGroup.POST("/update/:productName/:productId", productHandler.Set)
 
 	return &Server{
-		//handler: handler,
 		logger:  logger,
 		server:  server,
 		storage: db,

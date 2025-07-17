@@ -17,6 +17,7 @@ func NewCategories(db *Storage) (*Categories, error) {
 }
 
 func (c *Categories) Get(ctx context.Context) (category []models.Category, err error) {
+	var categoryDto []models.CategoryDto
 
 	sqlStatement := `SELECT * FROM public.categories`
 
@@ -38,6 +39,7 @@ func (c *Categories) Get(ctx context.Context) (category []models.Category, err e
 		}
 		category = append(category, cat)
 
+		categoryDto = append(categoryDto, models.CategoryDto{Id: cat.Id, ProductId: cat.ProductId, Name: cat.Name})
 	}
 
 	return category, nil
@@ -46,11 +48,15 @@ func (c *Categories) Get(ctx context.Context) (category []models.Category, err e
 
 func (c *Categories) Add(ctx context.Context, name string, productId string) (id string, err error) {
 	sqlStatement := `INSERT INTO public.categories
-					(name,product_id,created_at,updated_at) 
+					(id,product_id,created_at,updated_at) 
 					values ($1,$2,now(),now());`
 
-	_, err = c.db.DB.Exec(ctx, sqlStatement, name, productId)
+	result, err := c.db.DB.Exec(ctx, sqlStatement, name, productId)
+
 	if err != nil {
+		if result.Insert() == false {
+			return "", models.ErrUnique
+		}
 		return "", fmt.Errorf("error adding to DB %w", err)
 	}
 
@@ -86,9 +92,13 @@ func (c *Categories) Delete(ctx context.Context, id string) error {
 func (c *Categories) Set(ctx context.Context, id string, name string) error {
 	sqlStatement := `UPDATE public.categories SET name = $1 WHERE id = $2;`
 
-	_, err := c.db.DB.Exec(ctx, sqlStatement, name, id)
+	result, err := c.db.DB.Exec(ctx, sqlStatement, name, id)
 	if err != nil {
 		return fmt.Errorf("error updating DB %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFound
 	}
 
 	return nil

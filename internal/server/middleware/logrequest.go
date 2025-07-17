@@ -15,7 +15,7 @@ func LogRequest(logger *slog.Logger) echo.MiddlewareFunc {
 
 			stop := time.Now()
 
-			logger.Info("Request: %s %s %s %d\n", c.Request().Method, c.Request().URL, stop.Sub(start), c.Response().Status)
+			logger.Info("Request: ", "Method", c.Request().Method, "URL", c.Request().URL, "Time", stop.Sub(start), "Http Code", c.Response().Status)
 
 			return err
 		}

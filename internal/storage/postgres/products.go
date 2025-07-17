@@ -17,6 +17,7 @@ func NewProducts(db *Storage) (*Categories, error) {
 }
 
 func (c *Products) Get(ctx context.Context) (product []models.Product, err error) {
+	var productDto []models.ProductDto
 
 	sqlStatement := `SELECT * FROM public.products`
 
@@ -38,6 +39,8 @@ func (c *Products) Get(ctx context.Context) (product []models.Product, err error
 		}
 		product = append(product, prod)
 
+		productDto = append(productDto, models.ProductDto{Id: prod.Id, Name: prod.Name})
+
 	}
 
 	return product, nil
@@ -49,8 +52,12 @@ func (c *Products) Add(ctx context.Context, name string, productId string) (id s
 					(name,product_id,created_at,updated_at) 
 					values ($1,$2,now(),now());`
 
-	_, err = c.db.DB.Exec(ctx, sqlStatement, name, productId)
+	result, err := c.db.DB.Exec(ctx, sqlStatement, name, productId)
 	if err != nil {
+		if result.Insert() == false {
+			return "", models.ErrUnique
+		}
+
 		return "", fmt.Errorf("error adding to DB %w", err)
 	}
 
@@ -86,9 +93,13 @@ func (c *Products) Delete(ctx context.Context, id string) error {
 func (c *Products) Set(ctx context.Context, id string, name string) error {
 	sqlStatement := `UPDATE public.products SET name = $1 WHERE id = $2;`
 
-	_, err := c.db.DB.Exec(ctx, sqlStatement, name, id)
+	result, err := c.db.DB.Exec(ctx, sqlStatement, name, id)
 	if err != nil {
 		return fmt.Errorf("error updating DB %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFound
 	}
 
 	return nil

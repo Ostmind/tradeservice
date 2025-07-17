@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
@@ -46,6 +47,9 @@ func (ctr ProductController) Add(c echo.Context) error {
 
 	res, err := ctr.manager.Add(c.Request().Context(), productName, productId)
 	if err != nil {
+		if errors.Is(err, models.ErrUnique) {
+			return c.NoContent(http.StatusConflict)
+		}
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -60,6 +64,9 @@ func (ctr ProductController) Delete(c echo.Context) error {
 
 	err := ctr.manager.Delete(c.Request().Context(), productId)
 	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			return c.NoContent(http.StatusNotFound)
+		}
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -76,6 +83,9 @@ func (ctr ProductController) Set(c echo.Context) error {
 
 	err := ctr.manager.Set(c.Request().Context(), productId, productName)
 	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			return c.NoContent(http.StatusNotFound)
+		}
 		return c.NoContent(http.StatusInternalServerError)
 	}
 

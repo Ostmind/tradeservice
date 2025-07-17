@@ -19,10 +19,17 @@ func main() {
 	}
 
 	sloger := logger.SetupLogger(cfg.Server.EnvType)
+
 	sloger.Info("starting TradeService")
 
-	app := app.New(sloger, cfg)
-	app.Run()
+	app, err := app.New(sloger, cfg)
+	if err != nil {
+		log.Fatal("No App cannot start server", slog.Any("error", err))
+	}
+	err = app.Run()
+	if err != nil {
+		log.Fatal(" cannot start application", slog.Any("error", err))
+	}
 
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan,
