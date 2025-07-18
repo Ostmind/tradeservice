@@ -8,18 +8,18 @@ import (
 )
 
 type StorageProducts struct {
-	storage storage.StoreRepository
+	storage storage.ProductRepository
 }
 
-func New(storage storage.StoreRepository) *StorageProducts {
+func New(storage storage.ProductRepository) *StorageProducts {
 	return &StorageProducts{
 		storage: storage,
 	}
 }
 
-func (c StorageProducts) Add(ctx context.Context, name string, productId string) (id string, err error) {
+func (c StorageProducts) AddProduct(ctx context.Context, name string) (id string, err error) {
 
-	id, err = c.storage.Add(ctx, name, productId)
+	id, err = c.storage.AddProduct(ctx, name)
 
 	if err != nil {
 		return id, fmt.Errorf("failed to add product %w", err)
@@ -28,9 +28,9 @@ func (c StorageProducts) Add(ctx context.Context, name string, productId string)
 	return id, nil
 }
 
-func (c StorageProducts) Set(ctx context.Context, id string, name string) error {
+func (c StorageProducts) SetProduct(ctx context.Context, id string, name string) error {
 
-	err := c.storage.Set(ctx, id, name)
+	err := c.storage.SetProduct(ctx, id, name)
 
 	if err != nil {
 		return fmt.Errorf("failed to set product %w", err)
@@ -39,19 +39,19 @@ func (c StorageProducts) Set(ctx context.Context, id string, name string) error 
 	return nil
 }
 
-func (c StorageProducts) Get(ctx context.Context) ([]models.Category, error) {
-	category, err := c.storage.Get(ctx)
+func (c StorageProducts) GetProduct(ctx context.Context) ([]models.ProductDto, error) {
+	product, err := c.storage.GetProduct(ctx)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product %w", err)
 	}
 
-	return category, nil
+	return product, nil
 }
 
-func (c StorageProducts) Delete(ctx context.Context, id string) error {
+func (c StorageProducts) DeleteProduct(ctx context.Context, id string) error {
 
-	err := c.storage.Delete(ctx, id)
+	err := c.storage.DeleteProduct(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete product %w", err)
 	}

@@ -8,18 +8,18 @@ import (
 )
 
 type StorageCategories struct {
-	storage storage.StoreRepository
+	storage storage.CategoryRepository
 }
 
-func New(storage storage.StoreRepository) *StorageCategories {
+func New(storage storage.CategoryRepository) *StorageCategories {
 	return &StorageCategories{
 		storage: storage,
 	}
 }
 
-func (c StorageCategories) Add(ctx context.Context, name string, productId string) (id string, err error) {
+func (c StorageCategories) AddCategory(ctx context.Context, name string, productId string) (id string, err error) {
 
-	id, err = c.storage.Add(ctx, name, productId)
+	id, err = c.storage.AddCategory(ctx, name, productId)
 
 	if err != nil {
 		return id, fmt.Errorf("failed to add category %w", err)
@@ -28,9 +28,9 @@ func (c StorageCategories) Add(ctx context.Context, name string, productId strin
 	return id, nil
 }
 
-func (c StorageCategories) Set(ctx context.Context, id string, name string) error {
+func (c StorageCategories) SetCategory(ctx context.Context, id string, name string) error {
 
-	err := c.storage.Set(ctx, id, name)
+	err := c.storage.SetCategory(ctx, id, name)
 
 	if err != nil {
 		return fmt.Errorf("failed to set category %w", err)
@@ -39,19 +39,19 @@ func (c StorageCategories) Set(ctx context.Context, id string, name string) erro
 	return nil
 }
 
-func (c StorageCategories) Get(ctx context.Context) ([]models.Category, error) {
-	category, err := c.storage.Get(ctx)
+func (c StorageCategories) GetCategory(ctx context.Context) ([]models.CategoryDto, error) {
+	category, err := c.storage.GetCategory(ctx)
 
 	if err != nil {
-		return []models.Category{}, fmt.Errorf("failed to get categories %w", err)
+		return []models.CategoryDto{}, fmt.Errorf("failed to get categories %w", err)
 	}
 
 	return category, nil
 }
 
-func (c StorageCategories) Delete(ctx context.Context, id string) error {
+func (c StorageCategories) DeleteCategory(ctx context.Context, id string) error {
 
-	err := c.storage.Delete(ctx, id)
+	err := c.storage.DeleteCategory(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete category %w", err)
 	}

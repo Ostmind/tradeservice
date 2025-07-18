@@ -10,14 +10,13 @@ type Products struct {
 	db *Storage
 }
 
-func NewProducts(db *Storage) (*Categories, error) {
-	return &Categories{
+func NewProducts(db *Storage) (*Products, error) {
+	return &Products{
 		db: db,
 	}, nil
 }
 
-func (c *Products) Get(ctx context.Context) (product []models.Product, err error) {
-	var productDto []models.ProductDto
+func (c *Products) GetProduct(ctx context.Context) (productDto []models.ProductDto, err error) {
 
 	sqlStatement := `SELECT * FROM public.products`
 
@@ -25,7 +24,7 @@ func (c *Products) Get(ctx context.Context) (product []models.Product, err error
 	defer rows.Close()
 
 	if err != nil {
-		return product, fmt.Errorf("failed to query DB %w", err)
+		return productDto, fmt.Errorf("failed to query DB %w", err)
 	}
 
 	for rows.Next() {
@@ -37,24 +36,23 @@ func (c *Products) Get(ctx context.Context) (product []models.Product, err error
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DB %w", err)
 		}
-		product = append(product, prod)
 
 		productDto = append(productDto, models.ProductDto{Id: prod.Id, Name: prod.Name})
 
 	}
 
-	return product, nil
+	return productDto, nil
 
 }
 
-func (c *Products) Add(ctx context.Context, name string, productId string) (id string, err error) {
+func (c *Products) AddProduct(ctx context.Context, name string) (id string, err error) {
 	sqlStatement := `INSERT INTO public.products
-					(name,product_id,created_at,updated_at) 
-					values ($1,$2,now(),now());`
+					(name,created_at,updated_at) 
+					values ($1,now(),now());`
 
-	result, err := c.db.DB.Exec(ctx, sqlStatement, name, productId)
+	result, err := c.db.DB.Exec(ctx, sqlStatement, name)
 	if err != nil {
-		if result.Insert() == false {
+		if !result.Insert() {
 			return "", models.ErrUnique
 		}
 
@@ -79,7 +77,7 @@ func (c *Products) Add(ctx context.Context, name string, productId string) (id s
 	return id, nil
 }
 
-func (c *Products) Delete(ctx context.Context, id string) error {
+func (c *Products) DeleteProduct(ctx context.Context, id string) error {
 	sqlStatement := `DELETE FROM public.products WHERE id = $1;`
 
 	_, err := c.db.DB.Exec(ctx, sqlStatement, id)
@@ -90,7 +88,7 @@ func (c *Products) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c *Products) Set(ctx context.Context, id string, name string) error {
+func (c *Products) SetProduct(ctx context.Context, id string, name string) error {
 	sqlStatement := `UPDATE public.products SET name = $1 WHERE id = $2;`
 
 	result, err := c.db.DB.Exec(ctx, sqlStatement, name, id)

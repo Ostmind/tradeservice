@@ -16,8 +16,7 @@ func NewCategories(db *Storage) (*Categories, error) {
 	}, nil
 }
 
-func (c *Categories) Get(ctx context.Context) (category []models.Category, err error) {
-	var categoryDto []models.CategoryDto
+func (c *Categories) GetCategory(ctx context.Context) (categoryDto []models.CategoryDto, err error) {
 
 	sqlStatement := `SELECT * FROM public.categories`
 
@@ -25,7 +24,7 @@ func (c *Categories) Get(ctx context.Context) (category []models.Category, err e
 	defer rows.Close()
 
 	if err != nil {
-		return category, fmt.Errorf("failed to query DB %w", err)
+		return categoryDto, fmt.Errorf("failed to query DB %w", err)
 	}
 
 	for rows.Next() {
@@ -37,18 +36,17 @@ func (c *Categories) Get(ctx context.Context) (category []models.Category, err e
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DB %w", err)
 		}
-		category = append(category, cat)
 
 		categoryDto = append(categoryDto, models.CategoryDto{Id: cat.Id, ProductId: cat.ProductId, Name: cat.Name})
 	}
 
-	return category, nil
+	return categoryDto, nil
 
 }
 
-func (c *Categories) Add(ctx context.Context, name string, productId string) (id string, err error) {
+func (c *Categories) AddCategory(ctx context.Context, name string, productId string) (id string, err error) {
 	sqlStatement := `INSERT INTO public.categories
-					(id,product_id,created_at,updated_at) 
+					(name,product_id,created_at,updated_at) 
 					values ($1,$2,now(),now());`
 
 	result, err := c.db.DB.Exec(ctx, sqlStatement, name, productId)
@@ -78,18 +76,22 @@ func (c *Categories) Add(ctx context.Context, name string, productId string) (id
 	return id, nil
 }
 
-func (c *Categories) Delete(ctx context.Context, id string) error {
+func (c *Categories) DeleteCategory(ctx context.Context, id string) error {
 	sqlStatement := `DELETE FROM public.categories WHERE id = $1;`
 
-	_, err := c.db.DB.Exec(ctx, sqlStatement, id)
+	result, err := c.db.DB.Exec(ctx, sqlStatement, id)
 	if err != nil {
 		return fmt.Errorf("error deleting from DB %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFound
 	}
 
 	return nil
 }
 
-func (c *Categories) Set(ctx context.Context, id string, name string) error {
+func (c *Categories) SetCategory(ctx context.Context, id string, name string) error {
 	sqlStatement := `UPDATE public.categories SET name = $1 WHERE id = $2;`
 
 	result, err := c.db.DB.Exec(ctx, sqlStatement, name, id)
