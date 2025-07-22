@@ -7,6 +7,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/pressly/goose/v3 v3.24.3
+	go.uber.org/mock v0.5.2
 )
 
 require (

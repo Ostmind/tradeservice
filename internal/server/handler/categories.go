@@ -9,6 +9,8 @@ import (
 	"tradeservice/internal/models"
 )
 
+//go:generate mockgen -source=categories.go -destination=mock/categoriesrepository.go
+
 type CategoryManager interface {
 	AddCategory(ctx context.Context, name string, productId string) (id string, err error)
 	GetCategory(ctx context.Context) ([]models.CategoryDto, error)

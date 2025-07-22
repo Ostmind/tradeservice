@@ -9,6 +9,8 @@ import (
 	"tradeservice/internal/models"
 )
 
+//go:generate mockgen -source=products.go -destination=mockProducts/productsrepository.go
+
 type ProductManager interface {
 	AddProduct(ctx context.Context, name string) (id string, err error)
 	GetProduct(ctx context.Context) ([]models.ProductDto, error)
