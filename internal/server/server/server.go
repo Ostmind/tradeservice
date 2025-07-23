@@ -8,7 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 	"tradeservice/internal/config"
-	"tradeservice/internal/server/handler"
+	"tradeservice/internal/server/handler/categories"
+	"tradeservice/internal/server/handler/products"
 	"tradeservice/internal/server/middleware"
 	"tradeservice/internal/storage/postgres"
 )
@@ -23,8 +24,8 @@ type Server struct {
 func New(logger *slog.Logger,
 	cfg *config.ServerConfig,
 	db *postgres.Storage,
-	categoryHandler *handlers.CategoriesController,
-	productHandler *handlers.ProductController) *Server {
+	categoryHandler *categories.CategoriesController,
+	productHandler *products.ProductController) *Server {
 
 	server := echo.New()
 

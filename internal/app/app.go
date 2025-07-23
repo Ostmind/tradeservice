@@ -6,7 +6,8 @@ import (
 	"log/slog"
 	"time"
 	"tradeservice/internal/config"
-	"tradeservice/internal/server/handler"
+	categories_handler "tradeservice/internal/server/handler/categories"
+	products_handler "tradeservice/internal/server/handler/products"
 	srv "tradeservice/internal/server/server"
 	"tradeservice/internal/services/categories"
 	"tradeservice/internal/services/product"
@@ -41,8 +42,8 @@ func New(logger *slog.Logger, cfg *config.AppConfig) (*App, error) {
 	categoryManager := categories.New(categoryStorage)
 	productManager := product.New(productStorage)
 
-	categoryHandler := handlers.NewCategoriesHandler(categoryManager, logger)
-	productHandler := handlers.NewProductHandler(productManager, logger)
+	categoryHandler := categories_handler.NewCategoriesHandler(categoryManager, logger)
+	productHandler := products_handler.NewProductHandler(productManager, logger)
 
 	server := srv.New(logger, &cfg.Server, db, categoryHandler, productHandler)
 
