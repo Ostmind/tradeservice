@@ -17,9 +17,8 @@ func New(storage storage.CategoryRepository) *StorageCategories {
 	}
 }
 
-func (c StorageCategories) AddCategory(ctx context.Context, name string, productId string) (id string, err error) {
-
-	id, err = c.storage.AddCategory(ctx, name, productId)
+func (c StorageCategories) AddCategory(ctx context.Context, name string, productID string) (id string, err error) {
+	id, err = c.storage.AddCategory(ctx, name, productID)
 
 	if err != nil {
 		return id, fmt.Errorf("failed to add category %w", err)
@@ -29,7 +28,6 @@ func (c StorageCategories) AddCategory(ctx context.Context, name string, product
 }
 
 func (c StorageCategories) SetCategory(ctx context.Context, id string, name string) error {
-
 	err := c.storage.SetCategory(ctx, id, name)
 
 	if err != nil {
@@ -50,7 +48,6 @@ func (c StorageCategories) GetCategory(ctx context.Context) ([]models.CategoryDt
 }
 
 func (c StorageCategories) DeleteCategory(ctx context.Context, id string) error {
-
 	err := c.storage.DeleteCategory(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete category %w", err)

@@ -3,10 +3,11 @@ package products
 import (
 	"context"
 	"errors"
-	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
 	"tradeservice/internal/models"
+
+	"github.com/labstack/echo/v4"
 )
 
 //go:generate mockgen -source=products.go -destination=mockProducts/productsrepository.go
@@ -27,67 +28,66 @@ func NewProductHandler(manager ProductManager, log *slog.Logger) *ProductControl
 	return &ProductController{manager, log}
 }
 
-func (ctr ProductController) GetProduct(c echo.Context) error {
-
+func (ctr ProductController) GetProduct(echo echo.Context) error {
 	ctr.logger.Debug("Get Request for Products")
 
-	res, err := ctr.manager.GetProduct(c.Request().Context())
+	res, err := ctr.manager.GetProduct(echo.Request().Context())
 	if err != nil {
-		return c.NoContent(http.StatusInternalServerError)
+		return echo.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, res)
+	return echo.JSON(http.StatusOK, res)
 }
 
-func (ctr ProductController) AddProduct(c echo.Context) error {
-
+func (ctr ProductController) AddProduct(echo echo.Context) error {
 	ctr.logger.Debug("Post Request for Products")
 
-	productName := c.Param("productName")
+	productName := echo.Param("productName")
 
-	res, err := ctr.manager.AddProduct(c.Request().Context(), productName)
+	res, err := ctr.manager.AddProduct(echo.Request().Context(), productName)
 	if err != nil {
 		if errors.Is(err, models.ErrUnique) {
-			return c.NoContent(http.StatusConflict)
+			return echo.NoContent(http.StatusConflict)
 		}
-		return c.NoContent(http.StatusInternalServerError)
+
+		return echo.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.JSON(http.StatusOK, res)
+	return echo.JSON(http.StatusOK, res)
 }
 
-func (ctr ProductController) DeleteProduct(c echo.Context) error {
-
+func (ctr ProductController) DeleteProduct(echo echo.Context) error {
 	ctr.logger.Debug("Delete Request for Products")
 
-	productId := c.Param("productId")
+	productID := echo.Param("productId")
 
-	err := ctr.manager.DeleteProduct(c.Request().Context(), productId)
+	err := ctr.manager.DeleteProduct(echo.Request().Context(), productID)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			return c.NoContent(http.StatusNotFound)
+			return echo.NoContent(http.StatusNotFound)
 		}
-		return c.NoContent(http.StatusInternalServerError)
+
+		return echo.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.NoContent(http.StatusOK)
+	return echo.NoContent(http.StatusOK)
 }
 
-func (ctr ProductController) SetProduct(c echo.Context) error {
-
+func (ctr ProductController) SetProduct(echo echo.Context) error {
 	ctr.logger.Debug("Patch Request for Products")
 
-	productId := c.Param("productId")
+	productID := echo.Param("productId")
 
-	productName := c.Param("productName")
+	productName := echo.Param("productName")
 
-	err := ctr.manager.SetProduct(c.Request().Context(), productId, productName)
+	err := ctr.manager.SetProduct(echo.Request().Context(), productID, productName)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			return c.NoContent(http.StatusNotFound)
+			return echo.NoContent(http.StatusNotFound)
 		}
-		return c.NoContent(http.StatusInternalServerError)
+
+		return echo.NoContent(http.StatusInternalServerError)
 	}
 
-	return c.NoContent(http.StatusOK)
+	return echo.NoContent(http.StatusOK)
 }

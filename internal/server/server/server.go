@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
 	"tradeservice/internal/config"
@@ -12,6 +11,8 @@ import (
 	"tradeservice/internal/server/handler/products"
 	"tradeservice/internal/server/middleware"
 	"tradeservice/internal/storage/postgres"
+
+	"github.com/labstack/echo/v4"
 )
 
 type Server struct {
@@ -26,7 +27,6 @@ func New(logger *slog.Logger,
 	db *postgres.Storage,
 	categoryHandler *categories.CategoriesController,
 	productHandler *products.ProductController) *Server {
-
 	server := echo.New()
 
 	server.Use(middleware.LogRequest(logger))
@@ -54,9 +54,10 @@ func New(logger *slog.Logger,
 }
 func (s Server) Run() {
 	s.logger.Info("Server is running on: localhost", "Port", s.port)
+
 	if err := s.server.Start(fmt.Sprintf("localhost:%d", s.port)); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
-			s.logger.Error("Server starting error: %v", err)
+			s.logger.Error("Server starting error: %v", slog.Any("error_details", err))
 		}
 	}
 }
@@ -70,7 +71,8 @@ func (s Server) Stop(ctx context.Context) error {
 	err := s.server.Shutdown(ctx)
 
 	if err != nil {
-		s.logger.Error("Error: ", err)
+		s.logger.Error("Error: ", slog.Any("error_details", err))
+
 		return fmt.Errorf("error while stopping Server Request %w", err)
 	}
 

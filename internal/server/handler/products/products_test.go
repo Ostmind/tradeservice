@@ -2,10 +2,6 @@ package products_test
 
 import (
 	"context"
-	"errors"
-	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -14,9 +10,14 @@ import (
 	"tradeservice/internal/models"
 	"tradeservice/internal/server/handler/products"
 	mockproducts "tradeservice/internal/server/handler/products/mockProducts"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
-// простой тестовый логгер, для передачи в контроллер
 func newTestLogger() *slog.Logger {
 	return slog.New(NewDiscardHandler())
 }
@@ -43,22 +44,25 @@ func (h *DiscardHandler) Enabled(_ context.Context, _ slog.Level) bool {
 	return false
 }
 
-func createContext(method, path string, params map[string]string, body string) (echo.Context, *httptest.ResponseRecorder) {
+func createContext(method, path string, params map[string]string) (echo.Context, *httptest.ResponseRecorder) {
 	e := echo.New()
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	req := httptest.NewRequest(method, path, strings.NewReader(""))
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+	echo := e.NewContext(req, rec)
 
 	keys := make([]string, 0, len(params))
 	vals := make([]string, 0, len(params))
+
 	for k, v := range params {
 		keys = append(keys, k)
 		vals = append(vals, v)
 	}
-	c.SetParamNames(keys...)
-	c.SetParamValues(vals...)
 
-	return c, rec
+	echo.SetParamNames(keys...)
+
+	echo.SetParamValues(vals...)
+
+	return echo, rec
 }
 
 func TestCategoriesController_GetProduct(t *testing.T) {
@@ -70,16 +74,16 @@ func TestCategoriesController_GetProduct(t *testing.T) {
 	handler := products.NewProductHandler(mockManager, logger)
 
 	productList := []models.ProductDto{
-		{Id: "1", Name: "cat1"},
-		{Id: "2", Name: "cat2"},
+		{ID: "1", Name: "cat1"},
+		{ID: "2", Name: "cat2"},
 	}
 
 	mockManager.EXPECT().GetProduct(gomock.Any()).Return(productList, nil)
 
-	c, rec := createContext(http.MethodGet, "/products", nil, "")
+	echo, rec := createContext(http.MethodGet, "/products", nil)
 
-	err := handler.GetProduct(c)
-	assert.NoError(t, err)
+	err := handler.GetProduct(echo)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
@@ -91,12 +95,12 @@ func TestCategoriesController_GetProduct_Error(t *testing.T) {
 	logger := newTestLogger()
 	handler := products.NewProductHandler(mockManager, logger)
 
-	mockManager.EXPECT().GetProduct(gomock.Any()).Return(nil, errors.New("db error"))
+	mockManager.EXPECT().GetProduct(gomock.Any()).Return(nil, models.ErrDB)
 
-	c, rec := createContext(http.MethodGet, "/products", nil, "")
+	echo, rec := createContext(http.MethodGet, "/products", nil)
 
-	err := handler.GetProduct(c)
-	assert.NoError(t, err)
+	err := handler.GetProduct(echo)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
@@ -113,12 +117,12 @@ func TestCategoriesController_AddProduct_Success(t *testing.T) {
 
 	mockManager.EXPECT().AddProduct(gomock.Any(), productName).Return(newID, nil)
 
-	c, rec := createContext(http.MethodPost, "/products/create/:productName", map[string]string{
+	echo, rec := createContext(http.MethodPost, "/products/create/:productName", map[string]string{
 		"categoryName": productName,
-	}, "")
+	})
 
-	err := handler.AddProduct(c)
-	assert.NoError(t, err)
+	err := handler.AddProduct(echo)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, newID, strings.TrimSpace(rec.Body.String()))
 }
@@ -135,12 +139,12 @@ func TestCategoriesController_AddProduct_Conflict(t *testing.T) {
 
 	mockManager.EXPECT().AddProduct(gomock.Any(), productName).Return("", models.ErrUnique)
 
-	c, rec := createContext(http.MethodPost, "/products/create/:productName", map[string]string{
+	echo, rec := createContext(http.MethodPost, "/products/create/:productName", map[string]string{
 		"productName": productName,
-	}, "")
+	})
 
-	err := handler.AddProduct(c)
-	assert.NoError(t, err)
+	err := handler.AddProduct(echo)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusConflict, rec.Code)
 }
 
@@ -152,16 +156,16 @@ func TestCategoriesController_DeleteProduct_Success(t *testing.T) {
 	logger := newTestLogger()
 	handler := products.NewProductHandler(mockManager, logger)
 
-	productId := "42"
+	productID := "42"
 
-	mockManager.EXPECT().DeleteProduct(gomock.Any(), productId).Return(nil)
+	mockManager.EXPECT().DeleteProduct(gomock.Any(), productID).Return(nil)
 
-	c, rec := createContext(http.MethodDelete, "/product/:productId", map[string]string{
-		"productId": productId,
-	}, "")
+	echo, rec := createContext(http.MethodDelete, "/product/:productId", map[string]string{
+		"productId": productID,
+	})
 
-	err := handler.DeleteProduct(c)
-	assert.NoError(t, err)
+	err := handler.DeleteProduct(echo)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
@@ -173,16 +177,16 @@ func TestCategoriesController_DeleteProduct_NotFound(t *testing.T) {
 	logger := newTestLogger()
 	handler := products.NewProductHandler(mockManager, logger)
 
-	productId := "42"
+	productID := "42"
 
-	mockManager.EXPECT().DeleteProduct(gomock.Any(), productId).Return(models.ErrNotFound)
+	mockManager.EXPECT().DeleteProduct(gomock.Any(), productID).Return(models.ErrNotFound)
 
-	c, rec := createContext(http.MethodDelete, "/product/:productId", map[string]string{
-		"productId": productId,
-	}, "")
+	echo, rec := createContext(http.MethodDelete, "/product/:productId", map[string]string{
+		"productId": productID,
+	})
 
-	err := handler.DeleteProduct(c)
-	assert.NoError(t, err)
+	err := handler.DeleteProduct(echo)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
@@ -194,18 +198,18 @@ func TestCategoriesController_SetProduct_Success(t *testing.T) {
 	logger := newTestLogger()
 	handler := products.NewProductHandler(mockManager, logger)
 
-	productId := "42"
+	productID := "42"
 	productName := "updated"
 
-	mockManager.EXPECT().SetProduct(gomock.Any(), productId, productName).Return(nil)
+	mockManager.EXPECT().SetProduct(gomock.Any(), productID, productName).Return(nil)
 
-	c, rec := createContext(http.MethodPost, "/update/:productName/:productId", map[string]string{
-		"productId":   productId,
+	echo, rec := createContext(http.MethodPost, "/update/:productName/:productId", map[string]string{
+		"productId":   productID,
 		"productName": productName,
-	}, "")
+	})
 
-	err := handler.SetProduct(c)
-	assert.NoError(t, err)
+	err := handler.SetProduct(echo)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
@@ -217,17 +221,17 @@ func TestCategoriesController_SetProduct_NotFound(t *testing.T) {
 	logger := newTestLogger()
 	handler := products.NewProductHandler(mockManager, logger)
 
-	productId := "42"
+	productID := "42"
 	productName := "updated"
 
-	mockManager.EXPECT().SetProduct(gomock.Any(), productId, productName).Return(models.ErrNotFound)
+	mockManager.EXPECT().SetProduct(gomock.Any(), productID, productName).Return(models.ErrNotFound)
 
-	c, rec := createContext(http.MethodPost, "/update/:productName/:productId", map[string]string{
-		"productId":   productId,
+	echo, rec := createContext(http.MethodPost, "/update/:productName/:productId", map[string]string{
+		"productId":   productID,
 		"productName": productName,
-	}, "")
+	})
 
-	err := handler.SetProduct(c)
-	assert.NoError(t, err)
+	err := handler.SetProduct(echo)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
