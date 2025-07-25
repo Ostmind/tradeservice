@@ -18,7 +18,6 @@ func New(storage storage.ProductRepository) *StorageProducts {
 }
 
 func (c StorageProducts) AddProduct(ctx context.Context, name string) (id string, err error) {
-
 	id, err = c.storage.AddProduct(ctx, name)
 
 	if err != nil {
@@ -29,7 +28,6 @@ func (c StorageProducts) AddProduct(ctx context.Context, name string) (id string
 }
 
 func (c StorageProducts) SetProduct(ctx context.Context, id string, name string) error {
-
 	err := c.storage.SetProduct(ctx, id, name)
 
 	if err != nil {
@@ -50,7 +48,6 @@ func (c StorageProducts) GetProduct(ctx context.Context) ([]models.ProductDto, e
 }
 
 func (c StorageProducts) DeleteProduct(ctx context.Context, id string) error {
-
 	err := c.storage.DeleteProduct(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete product %w", err)

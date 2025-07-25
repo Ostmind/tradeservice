@@ -3,9 +3,11 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"tradeservice/internal/config"
+	"tradeservice/internal/models"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"tradeservice/internal/config"
 )
 
 type Storage struct {
@@ -22,8 +24,9 @@ func New(dbConfig config.DBConfig) (*Storage, error) {
 	err := db.connect(psqlInfo)
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating connection DB %w", err)
+		return nil, fmt.Errorf("error creating connection DB %w", models.ErrDBConnectionCreation)
 	}
+
 	return db, nil
 }
 
@@ -35,15 +38,16 @@ func (store *Storage) connect(connStr string) error {
 	pool, err := pgxpool.New(context.Background(), connStr)
 
 	if err != nil {
-		return fmt.Errorf("db.connect: %v", err)
+		return fmt.Errorf("db.connect: %w", err)
 	}
 
 	err = pool.Ping(context.Background())
 
 	if err != nil {
-		return fmt.Errorf("db.connect pool ping: %v", err)
+		return fmt.Errorf("db.connect pool ping: %w", err)
 	}
 
 	store.DB = pool
+
 	return nil
 }

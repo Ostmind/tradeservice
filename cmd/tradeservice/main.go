@@ -26,7 +26,9 @@ func main() {
 	if err != nil {
 		log.Fatal("No App cannot start server", slog.Any("error", err))
 	}
+
 	err = app.Run()
+
 	if err != nil {
 		log.Fatal(" cannot start application", slog.Any("error", err))
 	}
@@ -38,6 +40,6 @@ func main() {
 		syscall.SIGTERM)
 
 	<-stopChan
-	sloger.Info("Recieved interrupt signal")
+	sloger.Info("Received interrupt signal")
 	app.Stop(context.Background(), cfg.Server.ShutdownTimeout)
 }

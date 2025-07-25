@@ -1,12 +1,12 @@
 package models
 
 type CategoryDto struct {
-	Id        string `json:"id"`
+	ID        string `json:"id"`
 	Name      string `json:"name"`
-	ProductId string `json:"productId"`
+	ProductID string `json:"productId"`
 }
 
 type ProductDto struct {
-	Id   string `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }

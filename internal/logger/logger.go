@@ -32,5 +32,6 @@ func SetupLogger(envType string) *slog.Logger {
 			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
 		)
 	}
+
 	return log
 }

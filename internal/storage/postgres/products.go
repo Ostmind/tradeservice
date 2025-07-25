@@ -17,10 +17,13 @@ func NewProducts(db *Storage) (*Products, error) {
 }
 
 func (c *Products) GetProduct(ctx context.Context) (productDto []models.ProductDto, err error) {
-
 	sqlStatement := `SELECT * FROM public.products`
 
 	rows, err := c.db.DB.Query(ctx, sqlStatement)
+	if err != nil {
+		return productDto, fmt.Errorf("failed to query DB %w", err)
+	}
+
 	defer rows.Close()
 
 	if err != nil {
@@ -28,21 +31,18 @@ func (c *Products) GetProduct(ctx context.Context) (productDto []models.ProductD
 	}
 
 	for rows.Next() {
-
 		prod := models.Product{}
 
-		err = rows.Scan(&prod.Id, &prod.Name, &prod.Created, &prod.Updated)
+		err = rows.Scan(&prod.ID, &prod.Name, &prod.Created, &prod.Updated)
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DB %w", err)
 		}
 
-		productDto = append(productDto, models.ProductDto{Id: prod.Id, Name: prod.Name})
-
+		productDto = append(productDto, models.ProductDto{ID: prod.ID, Name: prod.Name})
 	}
 
 	return productDto, nil
-
 }
 
 func (c *Products) AddProduct(ctx context.Context, name string) (id string, err error) {
@@ -62,6 +62,10 @@ func (c *Products) AddProduct(ctx context.Context, name string) (id string, err 
 	sqlStatement = `SELECT id FROM public.products where name = $1`
 
 	rows, err := c.db.DB.Query(ctx, sqlStatement)
+	if err != nil {
+		return "", fmt.Errorf("failed to query DB %w", err)
+	}
+
 	defer rows.Close()
 
 	if err != nil {

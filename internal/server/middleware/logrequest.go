@@ -1,21 +1,26 @@
 package middleware
 
 import (
-	"github.com/labstack/echo/v4"
 	"log/slog"
 	"time"
+
+	"github.com/labstack/echo/v4"
 )
 
 func LogRequest(logger *slog.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(echo echo.Context) error {
 			start := time.Now()
 
-			err := next(c)
+			err := next(echo)
 
 			stop := time.Now()
 
-			logger.Info("Request: ", "Method", c.Request().Method, "URL", c.Request().URL, "Time", stop.Sub(start), "Http Code", c.Response().Status)
+			logger.Info("Request: ",
+				"Method", echo.Request().Method,
+				"URL", echo.Request().URL,
+				"Time", stop.Sub(start),
+				"Http Code", echo.Response().Status)
 
 			return err
 		}
