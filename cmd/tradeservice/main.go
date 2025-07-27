@@ -27,11 +27,7 @@ func main() {
 		log.Fatal("No App cannot start server", slog.Any("error", err))
 	}
 
-	err = app.Run()
-
-	if err != nil {
-		log.Fatal(" cannot start application", slog.Any("error", err))
-	}
+	go app.Run()
 
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan,

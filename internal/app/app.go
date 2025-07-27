@@ -54,16 +54,15 @@ func New(logger *slog.Logger, cfg *config.AppConfig) (*App, error) {
 	}, nil
 }
 
-func (a App) Run() error {
+func (a App) Run() {
 	a.logger.Info("Starting app...")
 	err := storage.RunMigration(a.db, a.logger, a.cfg.Server.MigrationPath)
 
 	if err != nil {
-		return fmt.Errorf("couldn't run migrations %w", err)
+		a.logger.Error("couldn't run migrations %w", slog.Any("error_details", err))
 	}
-	go a.server.Run()
 
-	return nil
+	a.server.Run()
 }
 
 func (a App) Stop(ctx context.Context, shutdownTimeout time.Duration) {
