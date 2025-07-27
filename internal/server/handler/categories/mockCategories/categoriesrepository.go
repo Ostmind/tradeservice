@@ -7,7 +7,7 @@
 //
 
 // Package mock_handlers is a generated GoMock package.
-package mock_handlers
+package mock_categories
 
 import (
 	context "context"

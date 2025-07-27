@@ -17,10 +17,13 @@ func NewCategories(db *Storage) (*Categories, error) {
 }
 
 func (c *Categories) GetCategory(ctx context.Context) (categoryDto []models.CategoryDto, err error) {
-
 	sqlStatement := `SELECT * FROM public.categories`
 
 	rows, err := c.db.DB.Query(ctx, sqlStatement)
+	if err != nil {
+		return categoryDto, fmt.Errorf("failed to query DB %w", err)
+	}
+
 	defer rows.Close()
 
 	if err != nil {
@@ -28,39 +31,42 @@ func (c *Categories) GetCategory(ctx context.Context) (categoryDto []models.Cate
 	}
 
 	for rows.Next() {
-
 		cat := models.Category{}
 
-		err = rows.Scan(&cat.Id, &cat.Name, &cat.Created, &cat.ProductId, &cat.Updated)
+		err = rows.Scan(&cat.ID, &cat.Name, &cat.Created, &cat.ProductID, &cat.Updated)
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DB %w", err)
 		}
 
-		categoryDto = append(categoryDto, models.CategoryDto{Id: cat.Id, ProductId: cat.ProductId, Name: cat.Name})
+		categoryDto = append(categoryDto, models.CategoryDto{ID: cat.ID, ProductID: cat.ProductID, Name: cat.Name})
 	}
 
 	return categoryDto, nil
-
 }
 
-func (c *Categories) AddCategory(ctx context.Context, name string, productId string) (id string, err error) {
+func (c *Categories) AddCategory(ctx context.Context, name string, productID string) (id string, err error) {
 	sqlStatement := `INSERT INTO public.categories
 					(name,product_id,created_at,updated_at) 
 					values ($1,$2,now(),now());`
 
-	result, err := c.db.DB.Exec(ctx, sqlStatement, name, productId)
+	result, err := c.db.DB.Exec(ctx, sqlStatement, name, productID)
 
 	if err != nil {
-		if result.Insert() == false {
+		if !result.Insert() {
 			return "", models.ErrUnique
 		}
+
 		return "", fmt.Errorf("error adding to DB %w", err)
 	}
 
 	sqlStatement = `SELECT id FROM public.categories where name = $1`
 
 	rows, err := c.db.DB.Query(ctx, sqlStatement)
+	if err != nil {
+		return "", fmt.Errorf("failed to query DB %w", err)
+	}
+
 	defer rows.Close()
 
 	if err != nil {

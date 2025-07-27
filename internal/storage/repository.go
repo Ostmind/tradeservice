@@ -6,7 +6,7 @@ import (
 )
 
 type CategoryRepository interface {
-	AddCategory(ctx context.Context, name string, productId string) (id string, err error)
+	AddCategory(ctx context.Context, name string, productID string) (id string, err error)
 	GetCategory(ctx context.Context) ([]models.CategoryDto, error)
 	SetCategory(ctx context.Context, id string, name string) error
 	DeleteCategory(ctx context.Context, id string) error
